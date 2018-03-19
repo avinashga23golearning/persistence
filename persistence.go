@@ -1,15 +1,17 @@
 package persistence
 
 import (
+	"log"
+
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/http"
 	"github.com/avinashga23golearning/model"
 )
 
-var client driver.Client
+var personCollection driver.Collection
 
 func init() {
-	client, _ = newDriver()
+	personCollection, _ = getPersonCollection()
 }
 
 //PersonPersistenceManager type
@@ -22,49 +24,54 @@ func NewPersonPersistenceManager() *PersonPersistenceManager {
 	return &personPersistenceManager
 }
 
-func newDriver() (driver.Client, error) {
-	conn, _ := http.NewConnection(http.ConnectionConfig{
+func getPersonCollection() (driver.Collection, error) {
+	auth := driver.BasicAuthentication("root", "root")
+	conn, err := http.NewConnection(http.ConnectionConfig{
 		Endpoints: []string{"http://192.168.100.10:8259"},
 	})
+	if err != nil {
+		log.Panic(err)
+	}
 
-	return driver.NewClient(driver.ClientConfig{
+	conn.SetAuthentication(auth)
+
+	client, err := driver.NewClient(driver.ClientConfig{
 		Connection: conn,
 	})
+	if err != nil {
+		log.Panic(err)
+	}
+
+	db, err := client.Database(nil, "_system")
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return db.Collection(nil, "person")
 }
 
 //CreatePerson creates person
 func (PersonPersistenceManager) CreatePerson(person model.Person) string {
 	person.ID = ""
 
-	db, _ := client.Database(nil, "_system")
-	col, _ := db.Collection(nil, "person")
-
-	meta, _ := col.CreateDocument(nil, person)
+	meta, _ := personCollection.CreateDocument(nil, person)
 	return meta.Key
 }
 
 //DeletePerson deletes person
 func (PersonPersistenceManager) DeletePerson(id string) {
-	db, _ := client.Database(nil, "_system")
-	col, _ := db.Collection(nil, "person")
-
-	col.RemoveDocument(nil, id)
+	personCollection.RemoveDocument(nil, id)
 }
 
 //UpdatePerson updates person
 func (PersonPersistenceManager) UpdatePerson(person model.Person) {
-	db, _ := client.Database(nil, "_system")
-	col, _ := db.Collection(nil, "person")
-
-	col.UpdateDocument(nil, person.ID, person)
+	personCollection.UpdateDocument(nil, person.ID, person)
 }
 
 //GetPersonByID gets person by id
 func (PersonPersistenceManager) GetPersonByID(id string) model.Person {
-	db, _ := client.Database(nil, "_system")
-	col, _ := db.Collection(nil, "person")
 	var person model.Person
 
-	col.ReadDocument(nil, id, &person)
+	personCollection.ReadDocument(nil, id, &person)
 	return person
 }
