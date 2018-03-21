@@ -27,7 +27,7 @@ func NewPersonPersistenceManager() *PersonPersistenceManager {
 func getPersonCollection() (driver.Collection, error) {
 	auth := driver.BasicAuthentication("root", "Mpv0DgupY7cgD53e")
 	conn, err := http.NewConnection(http.ConnectionConfig{
-		Endpoints: []string{"http://172.17.0.4:8529"},
+		Endpoints: []string{"http://192.168.100.10:8529"},
 	})
 	if err != nil {
 		log.Panic(err)
@@ -69,9 +69,20 @@ func (PersonPersistenceManager) UpdatePerson(person model.Person) {
 }
 
 //GetPersonByID gets person by id
-func (PersonPersistenceManager) GetPersonByID(id string) model.Person {
+func (PersonPersistenceManager) GetPersonByID(id string) (model.Person, bool) {
 	var person model.Person
+	personNotFound := false
 
-	personCollection.ReadDocument(nil, id, &person)
-	return person
+	meta, err := personCollection.ReadDocument(nil, id, &person)
+	if err != nil {
+		personNotFound = driver.IsNotFound(err)
+		if personNotFound {
+			log.Printf("person by id %s does not exists\n", id)
+		} else {
+			log.Fatal(err)
+		}
+	}
+
+	person.ID = meta.Key
+	return person, personNotFound
 }
