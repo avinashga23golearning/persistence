@@ -27,7 +27,7 @@ func NewPersonPersistenceManager() *PersonPersistenceManager {
 func getPersonCollection() (driver.Collection, error) {
 	auth := driver.BasicAuthentication("root", "Mpv0DgupY7cgD53e")
 	conn, err := http.NewConnection(http.ConnectionConfig{
-		Endpoints: []string{"http://192.168.100.10:8529"},
+		Endpoints: []string{"http://172.17.0.3:8529"},
 	})
 	if err != nil {
 		log.Panic(err)
