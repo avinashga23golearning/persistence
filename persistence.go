@@ -25,7 +25,7 @@ func NewPersonPersistenceManager() *PersonPersistenceManager {
 }
 
 func getPersonCollection() (driver.Collection, error) {
-	auth := driver.BasicAuthentication("root", "Mpv0DgupY7cgD53e")
+	auth := driver.BasicAuthentication("root", "root")
 	conn, err := http.NewConnection(http.ConnectionConfig{
 		Endpoints: []string{"http://arangodb:8529"},
 	})
